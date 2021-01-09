@@ -1,0 +1,34 @@
+.nav {
+  position: fixed; /* allows it to stick to the top of the screen*/
+  top: 0;
+  width: 100%;
+  /* but this will put the avatar off screen to the right, there are 2 ways to fix this*/
+  /* add position fixed and left/right for logo and avatar*/
+  padding: 20px;
+  height: 30px;
+  z-index: 1; /*guarantee this is on the top*/
+
+  /*position fixed with these 2 rules, you need to include width*/
+  display: flex;
+  justify-content: space-between;
+  transition-timing-function: ease-in;
+  transition: all 0.5s;
+}
+
+.nav__black {
+  background-color: #111;
+}
+
+.nav__logo {
+  position: fixed;
+  left: 20px;
+  width: 80px;
+  object-fit: contain; /*keep aspect ratio*/
+}
+
+.nav__avatar {
+  position: fixed;
+  right: 20px;
+  width: 30px;
+  object-fit: contain;
+}
