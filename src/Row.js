@@ -1,16 +1,17 @@
 import { useState, useEffect } from 'react';
 import YouTube from 'react-youtube';
-import movieTrailer from 'movie-trailer';
 import axios from './axios';
 import './Row.css';
 
 const base_url ='https://image.tmdb.org/t/p/original/';
+const REACT_APP_TMDB_API_KEY = process.env.REACT_APP_TMDB_API_KEY;
 
 export default function Row(props) {
-  const { title, fetchUrl, isLargeRow } = props;
+  const { title, fetchUrl, isLargeRow, isMovie } = props;
 
   const [movies, setMovies] = useState([]);
   const [trailerUrl, setTrailerUrl] = useState("");
+  const [failedTrailer, setFailedTrailer] = useState(false);
 
   //rule of thumb, any var used in useEffect, should be in the dependency array
   useEffect(() => {
@@ -30,16 +31,60 @@ export default function Row(props) {
     }
   }
 
+  const requestMovieTrailer = (id) => {
+    const movieTrailerRequestUrl = `/movie/${id}/videos?api_key=${REACT_APP_TMDB_API_KEY}&append_to_response=videos`
+    async function fetchData() {
+      const request = await axios.get(movieTrailerRequestUrl)
+      return request
+    }
+    return fetchData();
+  };
+
+  const requestTvTrailer = (id) => {
+    const tvTrailerRequestUrl = `/tv/${id}/videos?api_key=${REACT_APP_TMDB_API_KEY}&append_to_response=videos`
+    async function fetchData() {
+      const request = await axios.get(tvTrailerRequestUrl)
+      return request
+    }
+    return fetchData();
+  };
+
   const handleClick = (movie) => {
     if (trailerUrl) {
       setTrailerUrl('');
+      setFailedTrailer(false);
     } else {
-      movieTrailer(movie?.name || "")
+      console.log('id:', movie?.id)
+      if (isMovie) {
+        requestMovieTrailer(movie?.id || "")
+        .then(payload => {
+          console.log(payload)
+          if (payload.data.results[0]) {
+            const youtubeKey = payload.data.results[0].key
+            setTrailerUrl(youtubeKey)
+          } else {
+            setFailedTrailer(true);
+          }
+        })
+        .catch(err => console.log(err));
+      } else {
+        requestTvTrailer(movie?.id || "")
+          .then(payload => {
+            if (payload.data.results[0]) {
+              const youtubeKey = payload.data.results[0].key
+              setTrailerUrl(youtubeKey)
+            } else {
+              setFailedTrailer(true);
+            }
+          })
+          .catch(err => console.log(err));
+      }
+      /*movieTrailer(`${movie?.id}` || "")
       .then((url) => {
         const urlParams = new URLSearchParams(new URL(url).search);
         setTrailerUrl(urlParams.get('v'));
       })
-      .catch((err) => console.log(err));
+      .catch((err) => console.log(err.message));*/
     }
   }
 
@@ -58,7 +103,8 @@ export default function Row(props) {
             />
         ))}
       </div>
-      {trailerUrl && <YouTube videoId={trailerUrl} opts={opts} />}
+      {trailerUrl && <YouTube videoId={trailerUrl} opts={opts} /> }
+      {failedTrailer && <h2>Error: Failed to find trailer</h2>}
     </div>
   )
 }
