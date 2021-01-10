@@ -12,6 +12,7 @@ export default function Row(props) {
   const [movies, setMovies] = useState([]);
   const [trailerUrl, setTrailerUrl] = useState("");
   const [failedTrailer, setFailedTrailer] = useState(false);
+  const [rowEntryName, setRowEntryName] = useState("");
 
   //rule of thumb, any var used in useEffect, should be in the dependency array
   useEffect(() => {
@@ -54,16 +55,16 @@ export default function Row(props) {
       setTrailerUrl('');
       setFailedTrailer(false);
     } else {
-      console.log('id:', movie?.id)
+      console.log('id:', movie)
       if (isMovie) {
         requestMovieTrailer(movie?.id || "")
         .then(payload => {
-          console.log(payload)
           if (payload.data.results[0]) {
             const youtubeKey = payload.data.results[0].key
             setTrailerUrl(youtubeKey)
           } else {
             setFailedTrailer(true);
+            setRowEntryName(movie.title)
           }
         })
         .catch(err => console.log(err));
@@ -75,6 +76,7 @@ export default function Row(props) {
               setTrailerUrl(youtubeKey)
             } else {
               setFailedTrailer(true);
+              setRowEntryName(movie.title)
             }
           })
           .catch(err => console.log(err));
@@ -104,7 +106,7 @@ export default function Row(props) {
         ))}
       </div>
       {trailerUrl && <YouTube videoId={trailerUrl} opts={opts} /> }
-      {failedTrailer && <h2>Error: Failed to find trailer</h2>}
+      {failedTrailer && <h2>Error: Failed to find trailer for "{rowEntryName}"</h2>}
     </div>
   )
 }
